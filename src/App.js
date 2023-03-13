@@ -1,13 +1,15 @@
 import './App.css';
+import Content from './components/Content';
 import KonvaEditor from './KonvaEditor';
 import KonvaEditorProvider from './KonvaEditorProvider';
 
 function App() {
   return (
     <div className="App">
-      <KonvaEditorProvider>
+      {/* <KonvaEditorProvider>
         <KonvaEditor />
-      </KonvaEditorProvider>
+      </KonvaEditorProvider> */}
+      <Content/>
     </div>
   );
 }
