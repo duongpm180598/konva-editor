@@ -5,7 +5,7 @@ import KonvaEditorContext from './context/KonvaEditorContext'
 import ImageLayer from './layers/ImageLayer'
 import TextLayer from './layers/TextLayer'
 
-const initialLayers = [
+const initialFrontLayers = [
     {
         id: 1,
         text: "all draggble and resizable",
@@ -48,11 +48,15 @@ const initialLayers = [
     // }
 ]
 
+const initialBackLayers = []
+
 const KonvaEditor = () => {
 
     const stage = useRef()
     const context = useContext(KonvaEditorContext)
-    const [layers, setLayers] = useState(initialLayers)
+    const [frontLayer, setFrontLayer] = useState([])
+    const [backLayer, setBackLayer] = useState([])
+    const [layers, setLayers] = useState(initialFrontLayers)
     const [selectedLayer, setSelectedLayer] = useState(null);
 
     const onDeattach = (e) => {
@@ -92,11 +96,25 @@ const KonvaEditor = () => {
         textEditor.style.display = 'none'
     }
 
+    const changeSide = (side = 'front') => {
+        switch (side) {
+            case 'front':
+                setLayers(initialFrontLayers)
+                break
+            case 'back':
+                setLayers(initialBackLayers)
+                break
+            default: break
+        }
+    }
+
     return (
         <div className='container'>
-            {/* <button type="button" onClick={() => draw('image')}>Add image</button>
-            <button type='button' onClick={() => draw('text')}>Add text</button>
-            <button type='button' onClick={() => clearTransform()}>Clear</button> */}
+            <button type="button" onClick={() => changeSide('front')}>front</button>
+            <button type='button' onClick={() => changeSide('back')}>back</button>
+            {/* <button type="button">Add image</button>
+            <button type='button'>Add text</button>
+            <button type='button'>Clear</button> */}
             <Stage
                 ref={stage}
                 width={context.frameSize}
