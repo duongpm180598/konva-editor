@@ -60,7 +60,7 @@ function Content() {
             setImageObj(img)
         }
         img.src =
-            'https://cdn.luyenthinaq.edu.vn/wp-content/uploads/2022/06/z3465157044163_115fa3a7341473877b963ac1af175ea7-1-e1654276968675-982x491.jpg'
+            'https://goeco.link/Ziwmb'
     }, [])
 
     const [imageSize, setImageSize] = useState({

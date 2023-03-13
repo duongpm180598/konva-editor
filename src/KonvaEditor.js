@@ -1,6 +1,6 @@
-import Konva from 'konva'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Layer, Stage } from 'react-konva'
+import EditorTool from './components/EditerTool'
 import KonvaEditorContext from './context/KonvaEditorContext'
 import ImageLayer from './layers/ImageLayer'
 import TextLayer from './layers/TextLayer'
@@ -36,22 +36,24 @@ const initialLayers = [
         strokeWidth: 4,
         layerType: 'text'
     },
-    // {
-    //     id: 3,
-    //     src: 'https://upload.wikimedia.org/wikipedia/commons/5/55/John_William_Waterhouse_A_Mermaid.jpg',
-    //     x: 600 / 2 - 400 / 2,
-    //     y: 600 / 2 - 600 / 2,
-    //     width: 400,
-    //     height: 600,
-    //     draggable: true,
-    //     layerType: 'image'
-    // }
+    {
+        id: 3,
+        src: 'https://goeco.link/Ziwmb',
+        x: 1264 / 2 - 400 / 2,
+        y: 948 / 2 - 600 / 2,
+        width: 400,
+        height: 600,
+        draggable: true,
+        layerType: 'image'
+    }
 ]
+
 
 const KonvaEditor = () => {
 
     const stage = useRef()
     const context = useContext(KonvaEditorContext)
+    
     const [layers, setLayers] = useState(initialLayers)
     const [selectedLayer, setSelectedLayer] = useState(null);
 
@@ -92,17 +94,44 @@ const KonvaEditor = () => {
         textEditor.style.display = 'none'
     }
 
+    // size
+    const containerREf = useRef(null)
+    const [stageSize, setStageSize] = useState({
+        width: 0,
+        height: 0
+    })
+    useEffect(() => {
+        if (containerREf.current) {
+            const width = containerREf.current.clientWidth
+            const height = containerREf.current.clientHeight
+
+            console.log({width,height})
+
+            setStageSize({
+                width,
+                height
+            })
+        }
+    }, [containerREf])
+
+
+    const [toggleFlip, setToggleFlip] = React.useState({
+        flippedX: false,
+        flippedY: false
+    })
+
     return (
-        <div className='container'>
+        <div className='container' style={{ border: '1px solid #333', height: '100vh' }} ref={containerREf}>
             {/* <button type="button" onClick={() => draw('image')}>Add image</button>
             <button type='button' onClick={() => draw('text')}>Add text</button>
             <button type='button' onClick={() => clearTransform()}>Clear</button> */}
             <Stage
                 ref={stage}
-                width={context.frameSize}
-                height={context.frameSize}
+                // width={context.frameSize}
+                // height={context.frameSize}
                 onMouseDown={onDeattach}
                 onTouchStart={onDeattach}
+                {...stageSize}
             >
                 <Layer>
                     {layers.map((layer, i) => {
@@ -123,6 +152,8 @@ const KonvaEditor = () => {
                                 />
                                 : <ImageLayer
                                     key={i}
+                                    setToggleFlip={setToggleFlip}
+                                    toggleFlip={toggleFlip}
                                     imageProps={layer}
                                     isSelected={layer.id === selectedLayer}
                                     onSelect={() => {
@@ -152,6 +183,27 @@ const KonvaEditor = () => {
                 <button onClick={() => duplicateLayer()}>duplicate</button>
                 <button onClick={onDeleteLayer}>delete</button>
             </div>
+            <div className='text-editor-tools' id="image-editor">
+                <button 
+                    onClick={() => setToggleFlip(prev => ({
+                        ...prev,
+                        flippedX: true
+                    }))}
+                >FlipX</button>
+                <button
+                    onClick={() => setToggleFlip(prev => ({
+                        ...prev,
+                        flippedY: true
+                    }))}
+                >FlipY</button>
+                
+                <button onClick={() => onUpdateAlign('right')}>align right</button>
+                <button onClick={() => duplicateLayer()}>duplicate</button>
+                <button onClick={onDeleteLayer}>delete</button>
+            </div>
+            <EditorTool
+                onDeleteLayer={onDeleteLayer} setToggleFlip={setToggleFlip} type={'image'}
+            />
         </div>
     )
 

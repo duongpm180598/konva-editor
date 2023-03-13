@@ -1,13 +1,17 @@
-import React, { Fragment, useEffect, useRef, useState } from 'react'
+import React, { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { Image, Transformer } from 'react-konva'
 import useImage from 'use-image'
+import KonvaEditorContext from '../context/KonvaEditorContext'
 
 /**
  * 
  * @param {*} param0 
  * @returns 
  */
-const ImageLayer = ({ imageProps, isSelected, onSelect, onChange }) => {
+const ImageLayer = ({ imageProps, isSelected, onSelect, onChange, toggleFlip, setToggleFlip }) => {
+
+    const context = useContext(KonvaEditorContext)
+
     const imageRef = useRef();
     const trRef = useRef();
     let [image] = useImage(imageProps.src)
@@ -19,16 +23,87 @@ const ImageLayer = ({ imageProps, isSelected, onSelect, onChange }) => {
         }
     }, [isSelected])
 
+    const onItemClick = (event) => {
+        onSelect()
+        addEditor(event)
+        
+    }
+
+    const addEditor = (event) => {
+        const textNode = event.target
+        context.setCurrentLayer(textNode)
+        const editor = document.getElementById('image-editor')
+        const textPosition = textNode.absolutePosition()
+
+        const areaPosition = {
+            x: textPosition.x,
+            y: textPosition.y,
+        }
+        editor.style.display = 'block'
+        editor.style.top = areaPosition.y - 100 + 'px'
+        editor.style.left = areaPosition.x + 'px'
+    }
+
+    const onFlipX = () => {
+        const node = imageRef.current;
+        const scaleX = node.scaleX();
+        node.scaleX(-scaleX / 2); // flip horizontally
+        onChange({
+            ...imageProps,
+            scaleX: -scaleX, // update scaleX prop in imageProps
+            x: imageProps.x + (scaleX === 1 ? node.width() : -node.width()),
+        });
+    }
+
+    const onFlipY = () => {
+        const node = imageRef.current;
+        const scaleY = node.scaleY();
+        node.scaleY(-scaleY); // flip vertically
+        onChange({
+            ...imageProps,
+            scaleY: -scaleY, // update scaleY prop in imageProps
+            y: imageProps.y + (scaleY === 1 ? node.height() : -node.height())
+        });
+    }
+
+    useEffect(() => {
+        if (toggleFlip){
+            const { flippedX, flippedY } = toggleFlip
+            if (flippedX){
+                onFlipX()
+                setToggleFlip({
+                    flippedX: false,
+                    flippedY: false
+                })
+            }else if (flippedY) {
+                onFlipY()
+                setToggleFlip({
+                    flippedX: false,
+                    flippedY: false
+                })
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [toggleFlip])
+
+   
+    // useEffect(() => {
+    //     if (isFlippedY)
+    //         onFlipY()
+    // }, [isFlippedY])
+
     return (
         <Fragment>
             <Image
                 image={image}
-                onClick={onSelect}
-                onTap={onSelect}
+                onClick={onItemClick}
+                onTap={onItemClick}
+                onTouchStart={e => console.log({e})}
                 ref={imageRef}
                 {...imageProps}
                 draggable
                 onDragEnd={(e) => {
+                    addEditor(e)
                     onChange({
                         ...imageProps,
                         x: e.target.x(),
@@ -36,10 +111,6 @@ const ImageLayer = ({ imageProps, isSelected, onSelect, onChange }) => {
                     });
                 }}
                 onTransformEnd={(e) => {
-                    // transformer is changing scale of the node
-                    // and NOT its width or height
-                    // but in the store we have only width and height
-                    // to match the data better we will reset scale on transform end
                     const node = imageRef.current;
                     const scaleX = node.scaleX();
                     const scaleY = node.scaleY();
@@ -51,14 +122,15 @@ const ImageLayer = ({ imageProps, isSelected, onSelect, onChange }) => {
                         ...imageProps,
                         x: node.x(),
                         y: node.y(),
-                        // set minimal value
                         width: Math.max(5, node.width() * scaleX),
                         height: Math.max(5, node.height() * scaleY)
                     });
                 }}
             />
             {isSelected && (
-                <Transformer ref={trRef} />
+                <Transformer 
+                    ref={trRef}
+                />
             )}
         </Fragment>
     )
