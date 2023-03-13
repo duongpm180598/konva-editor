@@ -128,7 +128,6 @@ function KonvaImage({
         handleCenter()
     }, [isCentered])
 
-    console.log('================================', imageProps)
     return (
         <React.Fragment>
             <Group

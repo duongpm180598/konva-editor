@@ -5,56 +5,78 @@ import KonvaEditorContext from './context/KonvaEditorContext'
 import ImageLayer from './layers/ImageLayer'
 import TextLayer from './layers/TextLayer'
 
-const initialLayers = [
-    {
-        id: 1,
-        text: "all draggble and resizable",
-        x: 50,
-        y: 250,
-        fontSize: 40,
-        draggable: true,
-        width: 400,
-        ellipsis: true,
-        fontFamily: "changa",
-        stroke: "blue",
-        align: "center",
-        layerType: 'text'
-    },
-    {
-        id: 2,
-        text: "hello world",
-        x: 10,
-        y: 120,
-        fontSize: 120,
-        draggable: true,
-        width: 600,
-        fontStyle: "normal",
-        align: "left",
-        lineHeight: 1,
-        fill: "#f84852",
-        stroke: "purple",
-        strokeWidth: 4,
-        layerType: 'text'
-    },
-    {
-        id: 3,
-        src: 'https://goeco.link/Ziwmb',
-        x: 1264 / 2 - 400 / 2,
-        y: 948 / 2 - 600 / 2,
-        width: 400,
-        height: 600,
-        draggable: true,
-        layerType: 'image'
-    }
-]
-
-
 const KonvaEditor = () => {
 
     const stage = useRef()
     const context = useContext(KonvaEditorContext)
     
-    const [layers, setLayers] = useState(initialLayers)
+    // const [layers, setLayers] = useState(initialLayers)
+    const [initialLayers, setInitialLayers] = useState([
+        {
+            side: 'front',
+            layers: [
+                {
+                    id: 1,
+                    text: "all draggble and resizable",
+                    x: 50,
+                    y: 250,
+                    fontSize: 40,
+                    draggable: true,
+                    width: 400,
+                    ellipsis: true,
+                    fontFamily: "changa",
+                    stroke: "blue",
+                    align: "center",
+                    layerType: 'text'
+                },
+                {
+                    id: 2,
+                    text: "hello world",
+                    x: 10,
+                    y: 120,
+                    fontSize: 120,
+                    draggable: true,
+                    width: 600,
+                    fontStyle: "normal",
+                    align: "left",
+                    lineHeight: 1,
+                    fill: "#f84852",
+                    stroke: "purple",
+                    strokeWidth: 4,
+                    layerType: 'text'
+                },
+                {
+                    id: 3,
+                    src: 'https://goeco.link/Ziwmb',
+                    x: 1264 / 2 - 400 / 2,
+                    y: 948 / 2 - 600 / 2,
+                    width: 400,
+                    height: 600,
+                    draggable: true,
+                    layerType: 'image'
+                }
+
+            ]
+        },
+        {
+            side: 'back',
+            layers: [
+                {
+                    id: 3,
+                    src: 'https://upload.wikimedia.org/wikipedia/commons/5/55/John_William_Waterhouse_A_Mermaid.jpg',
+                    x: 600 / 2 - 400 / 2,
+                    y: 600 / 2 - 600 / 2,
+                    width: 400,
+                    height: 600,
+                    draggable: true,
+                    layerType: 'image'
+                }
+            ]
+        }
+
+    ])
+    const [currentSide, setCurrentSide] = useState('front')
+    const [layers, setLayers] = useState([])
     const [selectedLayer, setSelectedLayer] = useState(null);
 
     const onDeattach = (e) => {
@@ -73,7 +95,6 @@ const KonvaEditor = () => {
     const duplicateLayer = () => {
         const layer = layers.find(l => l.id === selectedLayer)
         layer.id = 5
-        console.log(layer)
         if (layer) {
             const newLayers = [...layers, layer]
             setLayers(newLayers)
@@ -89,21 +110,35 @@ const KonvaEditor = () => {
         }
     }
 
+    const onFlipX = () => {
+        if (context.currentLayer) {
+            context.currentLayer.offsetX(context.currentLayer.width() / 2)
+            context.currentLayer.to({ scaleX: -context.currentLayer.scaleX() })
+        }
+    }
+
+    const onFlipY = () => {
+        if (context.currentLayer) {
+            context.currentLayer.offsetY(context.currentLayer.height() / 2)
+            context.currentLayer.to({ scaleY: -context.currentLayer.scaleY() })
+        }
+    }
+
     const hideTool = () => {
         const textEditor = document.getElementById('text-editor')
         textEditor.style.display = 'none'
     }
 
     // size
-    const containerREf = useRef(null)
+    const containerRef = useRef(null)
     const [stageSize, setStageSize] = useState({
         width: 0,
         height: 0
     })
     useEffect(() => {
-        if (containerREf.current) {
-            const width = containerREf.current.clientWidth
-            const height = containerREf.current.clientHeight
+        if (containerRef.current) {
+            const width = containerRef.current.clientWidth
+            const height = containerRef.current.clientHeight
 
             console.log({width,height})
 
@@ -112,7 +147,7 @@ const KonvaEditor = () => {
                 height
             })
         }
-    }, [containerREf])
+    }, [containerRef])
 
 
     const [toggleFlip, setToggleFlip] = React.useState({
@@ -120,11 +155,27 @@ const KonvaEditor = () => {
         flippedY: false
     })
 
+    const updateLayerBySide = (side = 'front', newLayers = []) => {
+        const layerBySide = initialLayers.find(layer => layer.side === side)
+        layerBySide.layers = newLayers
+    }
+
+    useEffect(() => {
+        const selectedLayer = initialLayers.find(layer => layer.side === currentSide)
+        setLayers(selectedLayer.layers)
+    }, [currentSide])
+
+
     return (
-        <div className='container' style={{ border: '1px solid #333', height: '100vh' }} ref={containerREf}>
+        <div className='container' style={{ border: '1px solid #333', height: '100vh' }} ref={containerRef}>
             {/* <button type="button" onClick={() => draw('image')}>Add image</button>
             <button type='button' onClick={() => draw('text')}>Add text</button>
             <button type='button' onClick={() => clearTransform()}>Clear</button> */}
+            <button type="button" onClick={() => setCurrentSide('front')}>front</button>
+            <button type='button' onClick={() => setCurrentSide('back')}>back</button>
+            {/* <button type="button">Add image</button>
+            <button type='button'>Add text</button>
+            <button type='button'>Clear</button> */}
             <Stage
                 ref={stage}
                 // width={context.frameSize}
@@ -148,6 +199,7 @@ const KonvaEditor = () => {
                                         const listLayers = layers.slice();
                                         listLayers[i] = newAttrs;
                                         setLayers(listLayers);
+                                        updateLayerBySide(currentSide, listLayers)
                                     }}
                                 />
                                 : <ImageLayer
@@ -163,6 +215,7 @@ const KonvaEditor = () => {
                                         const listLayers = layers.slice();
                                         listLayers[i] = newAttrs;
                                         setLayers(listLayers);
+                                        updateLayerBySide(currentSide, listLayers)
                                     }}
                                 />
                         );
@@ -180,6 +233,8 @@ const KonvaEditor = () => {
                 <button onClick={() => onUpdateAlign('left')}>align left</button>
                 <button onClick={() => onUpdateAlign('center')}>align center</button>
                 <button onClick={() => onUpdateAlign('right')}>align right</button>
+                <button onClick={() => onFlipX()}>flip x</button>
+                <button onClick={() => onFlipY()}>flip y</button>
                 <button onClick={() => duplicateLayer()}>duplicate</button>
                 <button onClick={onDeleteLayer}>delete</button>
             </div>
@@ -201,9 +256,9 @@ const KonvaEditor = () => {
                 <button onClick={() => duplicateLayer()}>duplicate</button>
                 <button onClick={onDeleteLayer}>delete</button>
             </div>
-            <EditorTool
+            {/* <EditorTool
                 onDeleteLayer={onDeleteLayer} setToggleFlip={setToggleFlip} type={'image'}
-            />
+            /> */}
         </div>
     )
 
