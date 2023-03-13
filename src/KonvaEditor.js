@@ -6,6 +6,7 @@ import KonvaEditorContext from './context/KonvaEditorContext'
 import DesignHelper from './helper/DesignHelper'
 import ImageLayer from './layers/ImageLayer'
 import TextLayer from './layers/TextLayer'
+import EditorTool from './components/EditerTool';
 
 const KonvaEditor = () => {
 
@@ -96,6 +97,7 @@ const KonvaEditor = () => {
             context.setCurrentLayer(null)
             context.currentLayer.destroy()
         }
+        setSelectedLayer(null)
     }
 
     const onFlipX = () => {
@@ -159,6 +161,47 @@ const KonvaEditor = () => {
         setLayers(selectedLayer.layers)
     }, [currentSide])
 
+
+    // flip image horizontally and vertically
+    const [toggleFlip, setToggleFlip] = React.useState({
+        flippedX: false,
+        flippedY: false
+    })
+
+    // add editor
+    const addEditorMenu = (event) => {
+        const elNode = event.target
+        context.setCurrentLayer(elNode)
+        const editor = document.getElementById('image-editor')
+        const textPosition = elNode.absolutePosition()
+
+        const areaPosition = {
+            x: textPosition.x,
+            y: textPosition.y,
+        }
+        editor.style.display = 'block'
+        editor.style.top = areaPosition.y - 50 + 'px'
+        editor.style.left = areaPosition.x - 50 + 'px'
+    }
+
+    const setFullSize = (axis = 'xy') => {
+        const width = context.frameSize
+        const height = context.frameSize
+        setLayers(prev => {
+            return prev.map(item => {
+                if (item.id === selectedLayer) {
+                    return {
+                        ...item,
+                        width: axis === 'xy' || axis === 'x' ? width : item.width,
+                        height: axis === 'xy' || axis === 'y' ? height : item.height,
+                        x: axis === 'xy' || axis === 'x' ? 0 : item.x,
+                        y: axis === 'xy' || axis === 'y' ? 0 : item.y,
+                    }
+                } return item
+            })
+        })
+    }
+
     return (
         <div className='container' style={{ border: '1px solid', width: `${context.frameSize}px`, height: `${context.frameSize}px` }}>
             <button type="button" onClick={() => setCurrentSide('front')}>front</button>
@@ -203,6 +246,11 @@ const KonvaEditor = () => {
                                         setLayers(listLayers);
                                         updateLayerBySide(currentSide, listLayers)
                                     }}
+
+                                    // optional
+                                    setToggleFlip={setToggleFlip}
+                                    toggleFlip={toggleFlip}
+                                    addEditorMenu={addEditorMenu}
                                 />
                         );
                     })}
@@ -224,6 +272,11 @@ const KonvaEditor = () => {
                 <button onClick={() => duplicateLayer()}>duplicate</button>
                 <button onClick={onDeleteLayer}>delete</button>
             </div>
+
+            <EditorTool
+                onDeleteLayer={onDeleteLayer} setToggleFlip={setToggleFlip} type={'image'}
+                setFullSize={setFullSize}
+            />
         </div>
     )
 
