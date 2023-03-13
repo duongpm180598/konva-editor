@@ -4,12 +4,17 @@ import KonvaEditorContext from './context/KonvaEditorContext'
 const KonvaEditorProvider = ({ children }) => {
 
     const [state, setState] = useState({
-        frameSize: 1200
+        frameSize: 960,
+        currentLayer: null,
     })
 
     return (
         <KonvaEditorContext.Provider value={{
-            frameSize: state.frameSize
+            frameSize: state.frameSize,
+            currentLayer: state.currentLayer,
+            setCurrentLayer: (currentLayer) => {
+                setState({...state, currentLayer})
+            }
         }}>
             {children}
         </KonvaEditorContext.Provider>

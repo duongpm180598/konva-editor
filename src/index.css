@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.inline-editor {
+  position: absolute;
+  border: none;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background: none;
+  outline: none;
+  resize: none;
+}
+
+.text-editor-tools {
+  display: none;
+  position: absolute;
+  width: 400px;
+  background-color: white;
+  box-shadow: 0 0 5px grey;
+  border-radius: 3px;
+}
