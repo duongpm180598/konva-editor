@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Layer, Stage } from 'react-konva'
-import EditorTool from './components/EditerTool'
+import DesignConstant from './constants/DesignConstant'
 import KonvaEditorContext from './context/KonvaEditorContext'
+import DesignHelper from './helper/DesignHelper'
 import ImageLayer from './layers/ImageLayer'
 import TextLayer from './layers/TextLayer'
 
@@ -16,7 +17,7 @@ const KonvaEditor = () => {
             side: 'front',
             layers: [
                 {
-                    id: 1,
+                    id: '1',
                     text: "all draggble and resizable",
                     x: 50,
                     y: 250,
@@ -25,12 +26,11 @@ const KonvaEditor = () => {
                     width: 400,
                     ellipsis: true,
                     fontFamily: "changa",
-                    stroke: "blue",
                     align: "center",
                     layerType: 'text'
                 },
                 {
-                    id: 2,
+                    id: '2',
                     text: "hello world",
                     x: 10,
                     y: 120,
@@ -41,7 +41,6 @@ const KonvaEditor = () => {
                     align: "left",
                     lineHeight: 1,
                     fill: "#f84852",
-                    stroke: "purple",
                     strokeWidth: 4,
                     layerType: 'text'
                 },
@@ -160,6 +159,38 @@ const KonvaEditor = () => {
         layerBySide.layers = newLayers
     }
 
+    const addImage = async () => {
+        const imageUrl = 'https://upload.wikimedia.org/wikipedia/vi/7/79/Super_Hero_Taisen.jpg'
+        const imageRatio = await DesignHelper.getImageRatio(imageUrl)
+        const imageWith = context.frameSize / 3;
+        const { x, y } = DesignHelper.getCenterCoordinate(
+            { x: imageWith, y: imageWith / imageRatio },
+            { x: context.frameSize, y: context.frameSize }
+        )
+        const image = {
+            ...DesignConstant.DEFAULT_IMAGE_ELEMENT,
+            src: imageUrl,
+            x,
+            y,
+            width: imageWith,
+            height: imageWith / imageRatio,
+        }
+        const newLayers = [...layers, image]
+        setLayers(newLayers)
+        updateLayerBySide(currentSide, newLayers)
+    }
+
+    const addText = () => {
+        const text = {
+            ...DesignConstant.DEFAULT_TEXT_ELEMENT,
+            x: context.frameSize / 2,
+            y: context.frameSize / 2,
+        }
+        const newLayers = [...layers, text]
+        setLayers(newLayers)
+        updateLayerBySide(currentSide, newLayers)
+    }
+
     useEffect(() => {
         const selectedLayer = initialLayers.find(layer => layer.side === currentSide)
         setLayers(selectedLayer.layers)
@@ -167,15 +198,11 @@ const KonvaEditor = () => {
 
 
     return (
-        <div className='container' style={{ border: '1px solid #333', height: '100vh' }} ref={containerRef}>
-            {/* <button type="button" onClick={() => draw('image')}>Add image</button>
-            <button type='button' onClick={() => draw('text')}>Add text</button>
-            <button type='button' onClick={() => clearTransform()}>Clear</button> */}
+        <div className='container' style={{ border: '1px solid', width: `${context.frameSize}px`, height: `${context.frameSize}px` }}>
             <button type="button" onClick={() => setCurrentSide('front')}>front</button>
             <button type='button' onClick={() => setCurrentSide('back')}>back</button>
-            {/* <button type="button">Add image</button>
-            <button type='button'>Add text</button>
-            <button type='button'>Clear</button> */}
+            <button type="button" onClick={() => addImage()}>Add image</button>
+            <button type='button' onClick={() => addText()}>Add text</button>
             <Stage
                 ref={stage}
                 // width={context.frameSize}
