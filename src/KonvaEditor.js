@@ -6,6 +6,7 @@ import KonvaEditorContext from './context/KonvaEditorContext'
 import DesignHelper from './helper/DesignHelper'
 import ImageLayer from './layers/ImageLayer'
 import TextLayer from './layers/TextLayer'
+import EditorTool from './components/EditerTool';
 
 const KonvaEditor = () => {
 
@@ -66,10 +67,12 @@ const KonvaEditor = () => {
     const [layers, setLayers] = useState([])
     const [selectedLayer, setSelectedLayer] = useState(null);
 
-    const onDeattach = (e) => {
+    const onDeAttach = (e) => {
         const clickedOnEmpty = e.target === e.target.getStage();
         if (clickedOnEmpty) {
-            setSelectedLayer(null);
+            hideTool()
+            setSelectedLayer(null)
+            context.setCurrentLayer(null)
         }
     }
 
@@ -90,9 +93,9 @@ const KonvaEditor = () => {
     }
 
     const onDeleteLayer = () => {
+        hideTool()
+        setSelectedLayer(null)
         if (context.currentLayer) {
-            hideTool()
-            setSelectedLayer(null)
             context.setCurrentLayer(null)
             context.currentLayer.destroy()
         }
@@ -114,7 +117,9 @@ const KonvaEditor = () => {
 
     const hideTool = () => {
         const textEditor = document.getElementById('text-editor')
+        const imageEditor = document.getElementById('image-editor')
         textEditor.style.display = 'none'
+        imageEditor.style.display = 'none'
     }
 
     const updateLayerBySide = (side = 'front', newLayers = []) => {
@@ -133,8 +138,11 @@ const KonvaEditor = () => {
         const image = {
             ...DesignConstant.DEFAULT_IMAGE_ELEMENT,
             src: imageUrl,
+            rotation: 0, // xoay
+            cornerRadius: 0, // radius
             x,
             y,
+            id: Date.now(),
             width: imageWith,
             height: imageWith / imageRatio,
         }
@@ -159,20 +167,210 @@ const KonvaEditor = () => {
         setLayers(selectedLayer.layers)
     }, [currentSide])
 
+
+    // flip image horizontally and vertically
+    const [toggleFlip, setToggleFlip] = React.useState({
+        flippedX: false,
+        flippedY: false
+    })
+
+    // add editor
+    const addEditorMenu = (event) => {
+        const elNode = event.target
+        context.setCurrentLayer(elNode)
+        const editor = document.getElementById('image-editor')
+        const textPosition = elNode.absolutePosition()
+
+        const areaPosition = {
+            x: textPosition.x,
+            y: textPosition.y,
+        }
+        editor.style.display = 'block'
+        editor.style.top = areaPosition.y - 50 + 'px'
+        editor.style.left = areaPosition.x - 50 + 'px'
+    }
+
+    const setFullSize = (axis = 'xy') => {
+        const width = context.frameSize
+        const height = context.frameSize
+        setLayers(prev => {
+            return prev.map(item => {
+                if (item.id === selectedLayer) {
+                    return {
+                        ...item,
+                        width: axis === 'xy' || axis === 'x' ? width : item.width,
+                        height: axis === 'xy' || axis === 'y' ? height : item.height,
+                        x: axis === 'xy' || axis === 'x' ? 0 : item.x,
+                        y: axis === 'xy' || axis === 'y' ? 0 : item.y,
+                    }
+                } return item
+            })
+        })
+    }
+
+    const setSize = (axis) => {
+        const {width,height} = axis
+        setLayers(prev => {
+            return prev.map(item => {
+                if (item.id === selectedLayer) {
+                    return {
+                        ...item,
+                        width: width ? width : item.width,
+                        height: height ? height : item.height
+                    }
+                } return item
+            })
+        })
+    }
+
+    const setScale = (number) => {
+        setLayers(prev => {
+            return prev.map(item => {
+                if (item.id === selectedLayer) {
+                    return {
+                        ...item,
+                        scaleX: number ? number : item.scaleX,
+                        scaleY: number ? number : item.scaleY
+                    }
+                } return item
+            })
+        })
+    }
+
+    const changeRotate = (number) => {
+        setLayers(prev => {
+            return prev.map(item => {
+                if (item.id === selectedLayer) {
+                    return {
+                        ...item,
+                        rotation: number ? number : 0,
+                    }
+                } return item
+            })
+        })
+    }
+
+    const setPosition = (position) => {
+        const { top, left } = position
+        console.log({ top, left })
+        setLayers(prev => {
+            return prev.map(item => {
+                if (item.id === selectedLayer) {
+                    return {
+                        ...item,
+                        y: top ? top : item.y,
+                        x: left ? left : item.x
+                    }
+                } return item
+            })
+        })
+    }
+
+    const setPosition2 = (position) => {
+        // const { top, left } = position
+        // console.log({ top, left })
+        setLayers(prev => {
+            return prev.map(item => {
+                if (item.id === selectedLayer) {
+                    if (position === 'top'){
+                        return {
+                            ...item,
+                            y: 0,
+                        }
+                    } else if (position === 'left') {
+                        return {
+                            ...item,
+                            x: 0,
+                        }
+                    }else if (position === 'bottom') {
+                        return {
+                            ...item,
+                            y: context.frameSize - item.height,
+                        }
+                    } else if (position === 'right') {
+                        return {
+                            ...item,
+                            x: context.frameSize - item.width,
+                        }
+                    } else if (position === 'ver') {
+                        const { x } = DesignHelper.getCenterCoordinate(
+                            { x: item.width, y: item.width },
+                            { x: context.frameSize, y: context.frameSize }
+                        )
+                        return {
+                            ...item,
+                            x: x,
+                        }
+                    } else if (position === 'hor') {
+                        const { y } = DesignHelper.getCenterCoordinate(
+                            { x: item.height, y: item.height },
+                            { x: context.frameSize, y: context.frameSize }
+                        )
+                        return {
+                            ...item,
+                            y:y,
+                        }
+                    }
+                } return item
+            })
+        })
+    }
+
+    const onZoom = (e) => {
+
+        const { deltaY } = e.evt
+
+        if (deltaY > 0){
+            setScaleXY(scaleXY / 1.2);
+        } else {
+            setScaleXY(scaleXY * 1.2);
+        }
+
+        let scale = 1
+        scale += deltaY * -0.01;
+
+        // Restrict scale
+        scale = Math.min(Math.max(0.125, scale), 4);
+
+        // Apply scale transform
+        // stage.current.style.transform = `scale(${scale})`;
+    }
+
+    const [drag, setDrag] = useState(false);
+
+    const [scaleXY, setScaleXY] = useState(1);
+
+    const handleZoomIn = () => {
+        setScaleXY(scaleXY * 1.2);
+    };
+
+    const handleZoomOut = () => {
+        setScaleXY(scaleXY / 1.2);
+    }
+
     return (
         <div className='container' style={{ border: '1px solid', width: `${context.frameSize}px`, height: `${context.frameSize}px` }}>
             <button type="button" onClick={() => setCurrentSide('front')}>front</button>
             <button type='button' onClick={() => setCurrentSide('back')}>back</button>
             <button type="button" onClick={() => addImage()}>Add image</button>
             <button type='button' onClick={() => addText()}>Add text</button>
+            <button type='button' onClick={() => setDrag(!drag)}>drag</button>
+            <button onClick={handleZoomIn}>Zoom In {Math.round(scaleXY * 100)}</button>
+            <button onClick={handleZoomOut}>Zoom Out {Math.round((1 / scaleXY) * 100)}</button>
             <Stage
                 ref={stage}
                 width={context.frameSize}
                 height={context.frameSize}
-                onMouseDown={onDeattach}
-                onTouchStart={onDeattach}
-            >
-                <Layer>
+                onClick={onDeAttach}
+                onMouseDown={onDeAttach}
+                onTouchStart={onDeAttach}
+                draggable={drag}
+                style={{ backgroundColor: 'green', cursor:`${drag ? 'grab' : 'default'}`}}
+                onWheel={onZoom}
+                scale={{ x: scaleXY, y: scaleXY }}
+                >
+                <Layer 
+                >
                     {layers.map((layer, i) => {
                         return (
                             layer.layerType === 'text' ?
@@ -203,6 +401,11 @@ const KonvaEditor = () => {
                                         setLayers(listLayers);
                                         updateLayerBySide(currentSide, listLayers)
                                     }}
+
+                                    // optional
+                                    setToggleFlip={setToggleFlip}
+                                    toggleFlip={toggleFlip}
+                                    addEditorMenu={addEditorMenu}
                                 />
                         );
                     })}
@@ -224,6 +427,12 @@ const KonvaEditor = () => {
                 <button onClick={() => duplicateLayer()}>duplicate</button>
                 <button onClick={onDeleteLayer}>delete</button>
             </div>
+
+            <EditorTool
+                onDeleteLayer={onDeleteLayer} setToggleFlip={setToggleFlip} type={'image'}
+                setFullSize={setFullSize} duplicateLayer={duplicateLayer} changeRotate={changeRotate}
+                setSize={setSize} setScale={setScale} setPosition={setPosition} setPosition2={setPosition2}
+            />
         </div>
     )
 
