@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useRef } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { Image, Transformer } from 'react-konva';
 import useImage from 'use-image';
 
@@ -9,31 +9,11 @@ const ImageLayer = ({ imageProps, isSelected, onSelect, onChange, toggleFlip, se
     let [image] = useImage(imageProps.src)
 
     const onItemClick = (event) => {
+        setZIndex(999);
+
         addEditorMenu(event)
         onSelect()
     }
-
-    // const onFlipX = () => {
-    //     const node = imageRef.current;
-    //     const scaleX = node.scaleX();
-    //     node.scaleX(-scaleX / 2); // flip horizontally
-    //     onChange({
-    //         ...imageProps,
-    //         scaleX: -scaleX, // update scaleX prop in imageProps
-    //         x: imageProps.x + (scaleX === 1 ? node.width() : -node.width()),
-    //     });
-    // }
-
-    // const onFlipY = () => {
-    //     const node = imageRef.current;
-    //     const scaleY = node.scaleY();
-    //     node.scaleY(-scaleY / 2); // flip vertically
-    //     onChange({
-    //         ...imageProps,
-    //         scaleY: -scaleY, // update scaleY prop in imageProps
-    //         y: imageProps.y + (scaleY === 1 ? node.height() : -node.height())
-    //     });
-    // }
 
     const flipNode = (flipAxis) => {
         const node = imageRef.current;
@@ -57,7 +37,9 @@ const ImageLayer = ({ imageProps, isSelected, onSelect, onChange, toggleFlip, se
         if (isSelected) {
             trRef.current.nodes([imageRef.current])
             trRef.current.getLayer().batchDraw()
+            setZIndex(999);
         }
+        setZIndex(1)
     }, [isSelected])
 
     useEffect(() => {
@@ -79,6 +61,9 @@ const ImageLayer = ({ imageProps, isSelected, onSelect, onChange, toggleFlip, se
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [toggleFlip])
+
+
+    const [zIndex, setZIndex] = useState(1);
 
     return (
         <Fragment>
@@ -118,9 +103,10 @@ const ImageLayer = ({ imageProps, isSelected, onSelect, onChange, toggleFlip, se
                         height: Math.max(5, node.height() * scaleY)
                     });
                 }}
+                zIndex={zIndex}
             />
             {isSelected && (
-                <Transformer ref={trRef} />
+                <Transformer ref={trRef} preventDefault={false}/>
             )}
         </Fragment>
     )
