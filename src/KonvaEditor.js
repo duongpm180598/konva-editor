@@ -142,7 +142,7 @@ const KonvaEditor = () => {
             cornerRadius: 0, // radius
             x,
             y,
-            id: Date.now(),
+            id: Date.now().toString(),
             width: imageWith,
             height: imageWith / imageRatio,
         }
@@ -168,26 +168,46 @@ const KonvaEditor = () => {
     }, [currentSide])
 
 
-    // flip image horizontally and vertically
-    const [toggleFlip, setToggleFlip] = React.useState({
-        flippedX: false,
-        flippedY: false
-    })
 
     // add editor
     const addEditorMenu = (event) => {
         const elNode = event.target
-        context.setCurrentLayer(elNode)
-        const editor = document.getElementById('image-editor')
         const textPosition = elNode.absolutePosition()
+        // context.setCurrentLayer(elNode)
+        const editor = document.getElementById('image-editor')
+        editor.style.display = 'block'
+
+
+
+
+        // const centerX = elNode.attrs.x - elNode.attrs.width / 2;
+        // const centerY = elNode.attrs.y - elNode.attrs.height / 2;
+
+        // console.log(centerX, centerY)
+        // console.log(textPosition.x, textPosition.y)
+        // const offsetX = 0;
+        // const offsetY = elNode.attrs.height / 2 + 20
+
+        // const centerX = elNode.attrs.x + elNode.attrs.width / 2;
+        // const centerY = elNode.attrs.y + elNode.attrs.height / 2;
+
+        // const elNodeX = centerX + offsetX;
+        // const elNodeY = centerY + offsetY;
+
+        // // console.log(elNodeX, elNodeY)
+
+        // editor.style.top = elNodeY + 'px'
+        // editor.style.left = elNodeX + 'px'
 
         const areaPosition = {
             x: textPosition.x,
             y: textPosition.y,
         }
-        editor.style.display = 'block'
-        editor.style.top = areaPosition.y - 50 + 'px'
+
+        editor.style.top = areaPosition.y - 100 + 'px'
         editor.style.left = areaPosition.x - 50 + 'px'
+
+
     }
 
     const setFullSize = (axis = 'xy') => {
@@ -209,7 +229,7 @@ const KonvaEditor = () => {
     }
 
     const setSize = (axis) => {
-        const {width,height} = axis
+        const { width, height } = axis
         setLayers(prev => {
             return prev.map(item => {
                 if (item.id === selectedLayer) {
@@ -252,7 +272,6 @@ const KonvaEditor = () => {
 
     const setPosition = (position) => {
         const { top, left } = position
-        console.log({ top, left })
         setLayers(prev => {
             return prev.map(item => {
                 if (item.id === selectedLayer) {
@@ -272,7 +291,7 @@ const KonvaEditor = () => {
         setLayers(prev => {
             return prev.map(item => {
                 if (item.id === selectedLayer) {
-                    if (position === 'top'){
+                    if (position === 'top') {
                         return {
                             ...item,
                             y: 0,
@@ -282,7 +301,7 @@ const KonvaEditor = () => {
                             ...item,
                             x: 0,
                         }
-                    }else if (position === 'bottom') {
+                    } else if (position === 'bottom') {
                         return {
                             ...item,
                             y: context.frameSize - item.height,
@@ -308,7 +327,7 @@ const KonvaEditor = () => {
                         )
                         return {
                             ...item,
-                            y:y,
+                            y: y,
                         }
                     }
                 } return item
@@ -320,7 +339,7 @@ const KonvaEditor = () => {
 
         const { deltaY } = e.evt
 
-        if (deltaY > 0){
+        if (deltaY > 0) {
             setScaleXY(scaleXY / 1.2);
         } else {
             setScaleXY(scaleXY * 1.2);
@@ -348,6 +367,12 @@ const KonvaEditor = () => {
         setScaleXY(scaleXY / 1.2);
     }
 
+    // flip image horizontally and vertically
+    const [flipAxis, setFlipAxis] = useState({
+        x: false,
+        y: false
+    })
+
     return (
         <div className='container' style={{ border: '1px solid', width: `${context.frameSize}px`, height: `${context.frameSize}px` }}>
             <button type="button" onClick={() => setCurrentSide('front')}>front</button>
@@ -365,11 +390,11 @@ const KonvaEditor = () => {
                 onMouseDown={onDeAttach}
                 onTouchStart={onDeAttach}
                 draggable={drag}
-                style={{ backgroundColor: 'green', cursor:`${drag ? 'grab' : 'default'}`}}
+                style={{ backgroundColor: 'green', cursor: `${drag ? 'grab' : 'default'}` }}
                 onWheel={onZoom}
                 scale={{ x: scaleXY, y: scaleXY }}
-                >
-                <Layer 
+            >
+                <Layer
                 >
                     {layers.map((layer, i) => {
                         return (
@@ -390,6 +415,7 @@ const KonvaEditor = () => {
                                 />
                                 : <ImageLayer
                                     key={i}
+                                    flipAxis={flipAxis}
                                     imageProps={layer}
                                     isSelected={layer.id === selectedLayer}
                                     onSelect={() => {
@@ -403,8 +429,6 @@ const KonvaEditor = () => {
                                     }}
 
                                     // optional
-                                    setToggleFlip={setToggleFlip}
-                                    toggleFlip={toggleFlip}
                                     addEditorMenu={addEditorMenu}
                                 />
                         );
@@ -429,9 +453,10 @@ const KonvaEditor = () => {
             </div>
 
             <EditorTool
-                onDeleteLayer={onDeleteLayer} setToggleFlip={setToggleFlip} type={'image'}
+                onDeleteLayer={onDeleteLayer} type={'image'}
                 setFullSize={setFullSize} duplicateLayer={duplicateLayer} changeRotate={changeRotate}
                 setSize={setSize} setScale={setScale} setPosition={setPosition} setPosition2={setPosition2}
+                setFlipAxis={setFlipAxis} flipAxis={flipAxis}
             />
         </div>
     )
